@@ -79,4 +79,5 @@ class TinsethModel(object):
             numpy.ndarray: 2-D array of utilization values.
         """
         t_grid, G_grid = np.meshgrid(t_arr, G_arr)
-        return t_grid, G_grid, TinsethModel.utilization(t_grid, G_grid, max_u=max_u, r=r)
+        u_grid = TinsethModel.utilization(t_grid, G_grid, max_u=max_u, r=r)
+        return t_grid, G_grid, u_grid
