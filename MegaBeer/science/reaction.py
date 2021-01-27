@@ -20,8 +20,8 @@ class RateEquations(object):
         if n == 1:
             return lambda t: A0 * np.exp(-k * t)
 
-        g = 1 - n
-        return lambda t: A0**g - g * k * t
+        g = 1. - float(n) # Convert to float.
+        return lambda t: (A0**g - g * k * t)**(1. / g)
     
     @staticmethod
     def order_zero(k, A0):
