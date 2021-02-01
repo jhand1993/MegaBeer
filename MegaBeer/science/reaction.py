@@ -58,3 +58,16 @@ class RateEquations(object):
             Function of time
         """
         return RateEquations.order_n(2, k, A0)
+
+
+def arrhenius(T, E0, A):
+    """ Arrhenius equation modeling temperature dependence on reaction rate.
+    Args:
+        T (float): Temperature in Kelvin
+        E0 (float): Activation energy in Joules
+        A (float): Pre-exponential factor
+    
+    Returns:
+        float: reaction rate k in min^-1
+    """
+    
