@@ -127,4 +127,9 @@ dmypy.json
 # vscode
 .vscode/
 
+# no random png files for now:
 *.png
+
+# don't add build/dist directories:
+build/
+dist/

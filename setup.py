@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
-from pathlib import Path
+import pathlib
 
-base_path = Path(__file__).parent
+base_path = pathlib.Path(__file__).parent
 
 readme = (base_path / 'README.md').read_text()
 
@@ -15,6 +15,7 @@ setup(
     license='GPL V3',
     packages=find_packages(exclude=('tests')),
     zip_safe=False,
+    install_requires=['numpy', 'scipy'],
     long_description=readme,
     long_description_content_type="text/markdown",
     include_package_data=True
