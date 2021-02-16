@@ -11,6 +11,7 @@ import numpy as np
 from MegaBeer.science import reaction
 from MegaBeer.science import heat
 from scipy.interpolate import RectBivariateSpline as rbs
+from scipy.integrate import quad
 
 
 class MaloShell:
@@ -46,7 +47,7 @@ class MaloShell:
         return MaloShell.maloshell(t, 0.01141, 0.00263)
 
     @staticmethod
-    def maloshell_cooling_curves(t, tau=132.5, T0=21.1):
+    def maloshell_cooling_curves(t, tau, T0=21.1):
         """ Approximates isomizeration rate during cooling.  Assumes reactions
             cease at T=80.  Default tau is taken from cooling one gallon of water
             in an 8 quart stainless steel stock pot.
@@ -110,9 +111,65 @@ class MaloShell:
         return util_func(t, temp_final)
 
 
+class mIBU:
+    """ Alchemy Overlords modified Tinseth utilization model
+        accounting for cooling of wort after flameout.
+    """
+    @staticmethod
+    def mIBU(
+        t, t_flameout, t_cool, surface_area, open_area, volume,
+        max_u=0.241, r=0.04
+    ):
+        """ Modified Tinseth from https://alchemyoverlord.wordpress.com/
+        Args:
+            t (float or numpy.ndarray): Iso time.
+            t_flameout (float): Burner turnoff time relative to t.
+            t_cool (float): Steeping/whirlpool time before rapid cooling.
+            surface_area (float): Exposed wort surface area in square 
+                centimeters.
+            open_area (float): Size of opening of pot in square centimeters.
+            volume (float): Volume of wort in liters.
+            max_u (float): Maximum utilization constant.  Default is 0.241.
+            r (float): Rate constant of growth.  Default is 0.04.
+
+        Results:
+            float or numpy.ndarray: Time component of utilization fraction.
+        """
+
+        # Constants for mIBU model:
+        c1 = 2.39e11
+        c2 = 9773.
+        c3 = 53.7
+        c4 = 319.95
+
+        # mIBU model timescale:
+        b = mIBU.b(surface_area, open_area, volume)
+
+        # calculate utilization at constant temperature:
+        base_util = tinseth(t_flameout, max_u=max_u, r=r)
+
+        corrected_rate = lambda x: tinseth_rate(t_flameout, max_u=max_u, r=r) * \
+            c1 * np.exp(-c2 / (c3 * np.exp(-b * (x)) + c4))
+        
+    
+    @staticmethod
+    def b(surface_area, open_area, volume):
+        """ tau-equivalent from Alchemy Overlord.
+        Args:
+            surface_area (float): Exposed wort surface area in square 
+                centimeters.
+            open_area (float): Size of opening of pot in square centimeters.
+            volume (float): Volume of wort in liters.
+        
+        Results:
+            float: b
+        """
+        eff_area = np.sqrt(surface_area * open_area)
+        return 2.925e-4 * eff_area / volume + 5.38e-3
+
+
 def tinseth(t, max_u=0.241, r=0.04):
     """ Temporal component of Tinseth model. Max_u and r taken from Palmer.
-        
         Note: 0.241 = 1 / 4.15.
     Args:
         t (float or numpy.ndarray): Boil time.
@@ -123,4 +180,18 @@ def tinseth(t, max_u=0.241, r=0.04):
         float or numpy.ndarray: Time component of utilization fraction.
     """
     return max_u * (1. - np.exp(-r * t)) 
+
+
+def tinseth_rate(t, max_u=0.241, r=0.04):
+    """ Derivative of the temporal component of Tinseth model.
+        Note: 0.241 = 1 / 4.15.
+    Args:
+        t (float or numpy.ndarray): Boil time.
+        max_u (float): Maximum utilization constant.  Default is 0.241.
+        r (float): Rate constant of growth.  Default is 0.04.
+
+    Results:
+        float or numpy.ndarray: Time component of utilization fraction.
+    """
+    return max_u * r * np.exp(-r * t)
 
