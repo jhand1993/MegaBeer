@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 import pathlib
+from MegaBeer.__init__ import __version__
 
 base_path = pathlib.Path(__file__).parent
 
@@ -7,7 +8,7 @@ readme = (base_path / 'README.md').read_text()
 
 setup(
     name='MegaBeer',
-    version='0.0.2',
+    version=__version__,
     description='Open source brewing tools tools',
     url='https://github.com/jhand1993/MegaBeer',
     author='Jared Hand',
