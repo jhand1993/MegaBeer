@@ -22,8 +22,8 @@ class MaloShell:
         """ AA isomizeration rates using the Malowicki & Shellhammer 2005
             model for a fixed gravity. pH fixed to 5.2.
 
-            For a fixed temperature T, the total isomizeration rate is a function of
-            time: c_iso(t) = const * f(t)
+            For a fixed temperature T, the total isomizeration rate is a
+            function of time: c_iso(t) = const * f(t)
         Args:
             t (float or numpy.ndarray): Boil time
             k1 (float): Isomerization reaction rate
