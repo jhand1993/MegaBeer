@@ -63,11 +63,13 @@ class RateEquations(object):
 def arrhenius(T, E0, A):
     """ Arrhenius equation modeling temperature dependence on reaction rate.
     Args:
-        T (float): Temperature in Kelvin
+        T (float): Temperature in Celcius.  Converted to Kelvin
         E0 (float): Activation energy in Joules
         A (float): Pre-exponential factor
     
     Returns:
         float: reaction rate k in min^-1
     """
+    R = 8.3145
+    return A * np.exp( - E0 / (T + 272.15) / R)
     

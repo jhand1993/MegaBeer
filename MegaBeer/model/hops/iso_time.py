@@ -4,7 +4,7 @@ Abbreviations:
     alpha acid: AA
     specific gravity: G
     original gravity: OG
-    temperature: T (celsius)
+    temperature: T
     time: t (minutes)
 """
 import numpy as np
@@ -76,7 +76,10 @@ class MaloShell:
         # LSQ bivariate interpolation to approximate surface
         util_func = rbs(temp_arr, t_arr, util_arr)
 
-        return np.array([util_func(t_arr[i], temp_arr_dense[i]) for i in range(n)], dtype=float)
+        return np.array(
+            [util_func(t_arr[i], temp_arr_dense[i]) for i in range(n)],
+            dtype=float
+            )
     
     @staticmethod
     def maloshell_cooling(t, tau=132.5, T0=21.1):
@@ -113,18 +116,20 @@ class MaloShell:
 
 class mIBU:
     """ Alchemy Overlords modified Tinseth utilization model
-        accounting for cooling of wort after flameout.
+        accounting for cooling of wort after flameout. T(t) has
+        been changed Newton's law of cooling for consistency.
     """
     @staticmethod
     def mIBU(
-        t, t_flameout, t_cool, surface_area, open_area, volume,
+        t, t_boil, t_cool, surface_area, open_area, volume,
         max_u=0.241, r=0.04
     ):
         """ Modified Tinseth from https://alchemyoverlord.wordpress.com/
         Args:
-            t (float or numpy.ndarray): Iso time.
-            t_flameout (float): Burner turnoff time relative to t.
-            t_cool (float): Steeping/whirlpool time before rapid cooling.
+            t (float or numpy.ndarray): Iso time.  Total time hop addition(s)
+                is(are) the wort.
+            t_boil (float): Boil time.
+            t_cool (float): Cooling time.
             surface_area (float): Exposed wort surface area in square 
                 centimeters.
             open_area (float): Size of opening of pot in square centimeters.
@@ -136,25 +141,36 @@ class mIBU:
             float or numpy.ndarray: Time component of utilization fraction.
         """
 
-        # Constants for mIBU model:
-        c1 = 2.39e11
-        c2 = 9773.
-        c3 = 53.7
-        c4 = 319.95
+        # Convert float to array:
+        t_arr = np.asarray(t)
+
+        # Mask that is true is t >= t_cool, false otherwise:
+        t_mask = t_arr >= t_cool
 
         # mIBU model timescale:
         b = mIBU.b(surface_area, open_area, volume)
 
         # calculate utilization at constant temperature:
-        base_util = tinseth(t_flameout, max_u=max_u, r=r)
+        boil_util = np.where(
+            t_mask, TinsethTime.tinseth(t_arr, max_u=max_u, r=r), 0.
+        )
 
-        corrected_rate = lambda x: tinseth_rate(t_flameout, max_u=max_u, r=r) * \
-            c1 * np.exp(-c2 / (c3 * np.exp(-b * (x)) + c4))
+        # Cooling rate to integrate
+        cool_rate = lambda x: TinsethTime.tinseth_rate(x, max_u=max_u, r=r) * \
+            mIBU.mIBU_rate_correction(t, b)
         
+        # Integrate to calculate cooling utilization.  Note that t_cool - t
+        # to t_cool is the total cooling time as t is the total time in the wort:
+        cool_util = np.where(
+            t_mask,
+            quad(cool_rate, 0., t_cool), quad(cool_rate, t_cool - t, t_cool)
+        )
+
+        return boil_util + cool_util
     
     @staticmethod
     def b(surface_area, open_area, volume):
-        """ tau-equivalent from Alchemy Overlord.
+        """ Timescale (tau equivalent) from Alchemy Overlord.
         Args:
             surface_area (float): Exposed wort surface area in square 
                 centimeters.
@@ -166,32 +182,53 @@ class mIBU:
         """
         eff_area = np.sqrt(surface_area * open_area)
         return 2.925e-4 * eff_area / volume + 5.38e-3
+    
+    @staticmethod
+    def mIBU_rate_correction(t, b):
+        """ mIBU relative rate differential correction factor.
+        Args:
+            t (float or numpy.ndarray): time
+            b (float): Temperature decay time scale.
+        
+        Returns:
+            float or numpy.ndarray: relative rate correction
+        """
+        # Constants for mIBU model:
+        c1 = 2.39e11
+        c2 = 9773.  # Units of E_activation / R
+        c3 = 53.7
+        c4 = 319.95
 
+        return c1 * np.exp(-c2 / (c3 * np.exp(-b * (t)) + c4))
 
-def tinseth(t, max_u=0.241, r=0.04):
-    """ Temporal component of Tinseth model. Max_u and r taken from Palmer.
-        Note: 0.241 = 1 / 4.15.
-    Args:
-        t (float or numpy.ndarray): Boil time.
-        max_u (float): Maximum utilization constant.  Default is 0.241.
-        r (float): Rate constant of growth.  Default is 0.04.
-
-    Results:
-        float or numpy.ndarray: Time component of utilization fraction.
+class TinsethTime():
+    """ Container class for Tinseth temporal component calculations
     """
-    return max_u * (1. - np.exp(-r * t)) 
+    @staticmethod
+    def tinseth(t, max_u=0.241, r=0.04):
+        """ Temporal component of Tinseth model. Max_u and r taken from Palmer.
+            Note: 0.241 = 1 / 4.15.
+        Args:
+            t (float or numpy.ndarray): Boil time.
+            max_u (float): Maximum utilization constant.  Default is 0.241.
+            r (float): Rate constant of growth.  Default is 0.04.
 
+        Results:
+            float or numpy.ndarray: Time component of utilization fraction.
+        """
+        return max_u * (1. - np.exp(-r * t)) 
 
-def tinseth_rate(t, max_u=0.241, r=0.04):
-    """ Derivative of the temporal component of Tinseth model.
-        Note: 0.241 = 1 / 4.15.
-    Args:
-        t (float or numpy.ndarray): Boil time.
-        max_u (float): Maximum utilization constant.  Default is 0.241.
-        r (float): Rate constant of growth.  Default is 0.04.
+    @staticmethod
+    def tinseth_rate(t, max_u=0.241, r=0.04):
+        """ Derivative of the temporal component of Tinseth model.
+            Note: 0.241 = 1 / 4.15.
+        Args:
+            t (float or numpy.ndarray): Boil time.
+            max_u (float): Maximum utilization constant.  Default is 0.241.
+            r (float): Rate constant of growth.  Default is 0.04.
 
-    Results:
-        float or numpy.ndarray: Time component of utilization fraction.
-    """
-    return max_u * r * np.exp(-r * t)
+        Results:
+            float or numpy.ndarray: Time component of utilization fraction.
+        """
+        return max_u * r * np.exp(-r * t)
 

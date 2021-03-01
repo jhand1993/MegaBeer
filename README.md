@@ -16,7 +16,7 @@ Currently working towards version 0.1:
 
 - [X] 0.0.1: [Tinseth model](https://realbeer.com/hops/research.html)
 - [X] 0.0.2: [Malowicki & Shellhammer 2005 (MS2005) model](https://pubs.acs.org/doi/pdf/10.1021/jf0481296)
-- [ ] 0.0.3: [mIBU from alchemyoverlord](https://alchemyoverlord.wordpress.com/2015/05/12/a-modified-ibu-measurement-especially-for-late-hopping/)
+- [X] 0.0.3: [mIBU from alchemyoverlord](https://alchemyoverlord.wordpress.com/2015/05/12/a-modified-ibu-measurement-especially-for-late-hopping/)
 - [ ] 0.0.4: Hop IBU calculations from AA% and utilization
 
 
