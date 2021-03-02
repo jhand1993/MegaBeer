@@ -47,7 +47,7 @@ class MaloShell:
         return MaloShell.maloshell(t, 0.01141, 0.00263)
 
     @staticmethod
-    def maloshell_cooling_curves(t, tau, T0=21.1):
+    def maloshell_cooling_curves(t, tau=132.5, T0=21.1):
         """ Approximates isomizeration rate during cooling.  Assumes reactions
             cease at T=80.  Default tau is taken from cooling one gallon of water
             in an 8 quart stainless steel stock pot.
@@ -65,10 +65,10 @@ class MaloShell:
         temp_arr_dense = heat.NewtonCooling.T(t, T0, 100., tau)
 
         # MS utilizations at fixed temperatures:
-        t_110 = MaloShell.maloshell(t, 0.03078, 0.0068) # From MS2005 table 3
+        t_110 = MaloShell.maloshell(t_arr, 0.03078, 0.0068) # From MS2005 table 3
         t_100 = MaloShell.maloshell_std(t_arr)
-        t_90 = MaloShell.maloshell(t, 0.00478, 0.00144) # From MS2005 table 3
-        t_80 = np.zeros_like(t) # Assume no isomizeration at 80 deg
+        t_90 = MaloShell.maloshell(t_arr, 0.00478, 0.00144) # From MS2005 table 3
+        t_80 = np.zeros_like(t_arr) # Assume no isomizeration at 80 deg
 
         # Stack arrays into matrix
         util_arr = np.concatenate([t_80, t_90, t_100, t_110])
@@ -101,9 +101,10 @@ class MaloShell:
 
         # MS utilizations at fixed temperatures:
         t_110 = MaloShell.maloshell(t, 0.03078, 0.0068) # From MS2005 table 3
-        t_100 = MaloShell.maloshell_std(t_arr)
+        t_100 = MaloShell.maloshell_std(t)
         t_90 = MaloShell.maloshell(t, 0.00478, 0.00144) # From MS2005 table 3
         t_80 = np.zeros_like(t) # Assume no isomizeration at 80 deg
+        print(t_110, t_100, t_90, t_80)
 
         # Stack arrays into matrix
         util_arr = np.concatenate([t_80, t_90, t_100, t_110])

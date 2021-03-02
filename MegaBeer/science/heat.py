@@ -1,4 +1,4 @@
-from numpy import np
+import numpy as np
 
 class NewtonCooling:
     """ Container class for Newton cooling law methods. Law states that

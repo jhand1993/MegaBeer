@@ -133,3 +133,4 @@ dmypy.json
 # don't add build/dist directories:
 build/
 dist/
+notebooks/
