@@ -7,7 +7,7 @@ class RateEquations(object):
     """
     @staticmethod
     def order_n(n, k, A0):
-        """ n order rate base method 
+        """ n order rate equation integral base method 
         Args:
             n (int): Order of reaction.
             k (float): Rate constant.
@@ -22,6 +22,18 @@ class RateEquations(object):
 
         g = 1. - float(n) # Convert to float.
         return lambda t: (A0**g - g * k * t)**(1. / g)
+    
+    @staticmethod
+    def dkn_dt(n, k):
+        """ n order rate equation base method.
+        Args:
+            n (int): Order of reaction.
+            k (float): Rate constant.
+
+        Returns:
+            Function of time
+        """
+        return lambda t: k**n
     
     @staticmethod
     def order_zero(k, A0):
@@ -60,10 +72,9 @@ class RateEquations(object):
         return RateEquations.order_n(2, k, A0)
 
 
-def arrhenius(T, E0, A):
+def arrhenius(E0, A):
     """ Arrhenius equation modeling temperature dependence on reaction rate.
     Args:
-        T (float): Temperature in Celcius.  Converted to Kelvin
         E0 (float): Activation energy in Joules
         A (float): Pre-exponential factor
     
@@ -71,5 +82,5 @@ def arrhenius(T, E0, A):
         float: reaction rate k in min^-1
     """
     R = 8.3145
-    return A * np.exp( - E0 / (T + 272.15) / R)
+    return lambda T: A * np.exp( - E0 / (T + 272.15) / R)
     

@@ -9,18 +9,17 @@ class NewtonCooling:
         coefficient, and A is the surface area of the cooling object.
     """
     @staticmethod
-    def T(t, T0, Ti, tau):
-        """ Base law using tau instead of full C/hA
+    def T(T0, Ti, tau):
+        """ Base law using tau instead of full C/hA.  Returns function T(t).
         Args:
-            t (float or numpy.ndarray): Time
             T0 (float): Ambient temperature.
             Ti (float): Initial temperature of material.
             tau (float): Timescale.
         
         Returns:
-            float: Temperature
+            Function returning temperature as a function of time
         """
-        return T0 + (T0 - Ti) * np.exp(-t / tau)
+        return lambda t: T0 + (Ti - T0) * np.exp(-t / tau)
     
     @staticmethod
     def tau_approximator(
