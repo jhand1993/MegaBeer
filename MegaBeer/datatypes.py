@@ -11,8 +11,8 @@ class DBObject:
 class Hop(DBObject):
     """ Datatype for hops.
     """
-    def __init__(self, AA, name=None):
-        self.AA = AA
+    def __init__(self, aa, name=None):
+        self.aa = aa
         self.name = name
         super().__init__('hop')
     

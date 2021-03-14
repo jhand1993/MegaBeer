@@ -3,30 +3,29 @@
 
 import numpy as np
 
-def tinseth(G):
+def tinseth():
     """ Gravity factor component of Tinseth model (1997).
     Args:
         G (float or numpy.ndarray): Standard gravity
 
     Returns:
-        float or numpy.ndarray: Gravity factor.
+        Function: Gravity utilization factor.
     """
-    return 1.65 * 0.000125**(G - 1.)
+    return lambda G: 1.65 * 0.000125**(G - 1.)
 
 
-def tinseth1050(G):
+def tinseth1050():
     """ Same as Tinseth 1997, but normalized to 1 at G=1.050 fo conform 
         with Rager.
-    Args:
-        G (float or numpy.ndarray): Standard gravity
 
     Returns:
-        float or numpy.ndarray: Gravity factor.
+        Function: Gravity utilization factor.
     """
-    return 1.5673 * 0.000125 * (G - 1.)
+    return lambda G: 1.5673 * 0.000125 * (G - 1.)
 
 def rager(G):
     """ Gravity factor from Jackie Rager (1990).  Always equal 1.0 if G < 1.050.
+        Rager's model is not a mathematically smooth function, thus is return
     Args:
         G (float or numpy.ndarray): Standard gravity
 
